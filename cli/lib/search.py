@@ -2,23 +2,29 @@ import json
 import os
 import string
 
-def search(title) -> None:
+def search(query) -> None:
     file_path_abs = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/movies.json"))
     with open(file_path_abs, "r") as file:
         movies = json.load(file)
 
     results = []
 
-    processed_title = process_string(title)
+    processed_query = process_string(query)
+    query_tokens = tokenization(processed_query)
 
     for movie in movies["movies"]:
-        if processed_title in process_string(movie["title"]):
-            results.append(movie)
+        title_tokens = tokenization(process_string(movie["title"]))
+        for token in query_tokens:
+            for word in title_tokens:
+                if token in word:
+                    results.append(movie)
+                    break
+            if movie in results:
+                break
 
     results = sorted(results,key=lambda movie: movie["id"])
     results = results[:5]
-    for movie in results:
-        print(f"{movie["id"]}. {movie["title"]} {movie["id"]}")
+    print_movies(results)
 
 def process_string(query) -> str:
     punctiations = {}
@@ -27,3 +33,11 @@ def process_string(query) -> str:
 
     processed_query = query.translate(str.maketrans(punctiations)).lower()
     return processed_query
+
+def tokenization(query: str) -> list:
+    words = query.split()
+    return words
+
+def print_movies(movies: list) -> None:
+    for movie in movies:
+        print(f"{movie["id"]}. {movie["title"]} {movie["id"]}")
