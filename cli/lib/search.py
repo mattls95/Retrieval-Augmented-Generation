@@ -9,7 +9,7 @@ def search(title) -> None:
     results = []
 
     for movie in movies["movies"]:
-        if title in movie["title"]:
+        if title.lower() in movie["title"].lower():
             results.append(movie)
 
     results = sorted(results,key=lambda movie: movie["id"])
