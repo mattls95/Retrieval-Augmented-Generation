@@ -1,6 +1,7 @@
 import json
 import os
 import string
+from nltk.stem import PorterStemmer
 
 def search(query) -> None:
     file_path_abs_movies = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/movies.json"))
@@ -13,12 +14,13 @@ def search(query) -> None:
         stopwords = f.read().splitlines()
 
     results = []
+    stemmer = PorterStemmer()
 
     processed_query = process_string(query)
-    query_tokens = tokenization(processed_query, stopwords=stopwords)
+    query_tokens = tokenization(processed_query, stopwords=stopwords, stemmer=stemmer)
 
     for movie in movies["movies"]:
-        title_tokens = tokenization(process_string(movie["title"]), stopwords=stopwords)
+        title_tokens = tokenization(process_string(movie["title"]), stopwords=stopwords, stemmer=stemmer)
         for token in query_tokens:
             for word in title_tokens:
                 if token in word:
@@ -39,10 +41,13 @@ def process_string(query) -> str:
     processed_query = query.translate(str.maketrans(punctiations)).lower()
     return processed_query
 
-def tokenization(query: str, stopwords: list) -> list:
+def tokenization(query: str, stopwords: list, stemmer:PorterStemmer) -> list:
     words = query.split()
     filtered_words = list(filter(lambda word: word not in stopwords, words))
-    return filtered_words
+    stemmed_words = []
+    for token in filtered_words:
+        stemmed_words.append(stemmer.stem(token))
+    return stemmed_words
 
 def print_movies(movies: list) -> None:
     for movie in movies:
