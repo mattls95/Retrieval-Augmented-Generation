@@ -1,7 +1,9 @@
 #!/usr/bin/env python3
 
 import argparse
+from lib.inverted_index import InvertedIndex
 from lib import search
+import os
 
 def main() -> None:
     parser = argparse.ArgumentParser(description="Keyword Search CLI")
@@ -10,15 +12,22 @@ def main() -> None:
     search_parser = subparsers.add_parser("search", help="Search movies using BM25")
     search_parser.add_argument("query", type=str, help="Search query")
 
-    args = parser.parse_args()
+    subparsers.add_parser("build", help="Build inverted index")
 
+    args = parser.parse_args()
+    inverted_index = InvertedIndex()
     match args.command:
         case "search":
             print(f"Searching for: {args.query}")
-            search.search(args.query)
-        case _:
-            parser.print_help()
-
+            try:
+                inverted_index.load()
+            except FileNotFoundError:
+                    print("Index not found, please run the build command first.")
+                    os._exit(1)
+            search.search(args.query, inverted_index)
+        case "build":
+            inverted_index.build()
+            inverted_index.save()
 
 if __name__ == "__main__":
     main()

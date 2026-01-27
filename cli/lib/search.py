@@ -1,36 +1,26 @@
-import json
-import os
 import string
-from nltk.stem import PorterStemmer
 
-def search(query) -> None:
-    file_path_abs_movies = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/movies.json"))
-    with open(file_path_abs_movies, "r") as file:
-        movies = json.load(file)
+from .search_utils import load_movies, tokenization
+from lib.inverted_index import InvertedIndex
 
-    stopwords = []
-    file_path_abs_stopwords = os.path.abspath(os.path.join(os.path.dirname(__file__), "../../data/stopwords.txt"))
-    with open(file_path_abs_stopwords, "r") as f:
-        stopwords = f.read().splitlines()
-
+def search(query, inverted_index:InvertedIndex) -> None:
     results = []
-    stemmer = PorterStemmer()
-
-    processed_query = process_string(query)
-    query_tokens = tokenization(processed_query, stopwords=stopwords, stemmer=stemmer)
-
-    for movie in movies["movies"]:
-        title_tokens = tokenization(process_string(movie["title"]), stopwords=stopwords, stemmer=stemmer)
-        for token in query_tokens:
-            for word in title_tokens:
-                if token in word:
-                    results.append(movie)
-                    break
-            if movie in results:
+    seen_ids = set()
+    query_tokens = tokenization(query)
+    
+    for token in query_tokens:
+        doc_ids = inverted_index.get_document(token)
+        for doc_id in doc_ids:
+            if doc_id in seen_ids:
+                continue
+            seen_ids.add(doc_id)
+            movie = inverted_index.docmap[doc_id]
+            if len(results) >= 5:
                 break
+            results.append(movie)
+        if len(results) >= 5:
+            break
 
-    results = sorted(results,key=lambda movie: movie["id"])
-    results = results[:5]
     print_movies(results)
 
 def process_string(query) -> str:
@@ -41,14 +31,6 @@ def process_string(query) -> str:
     processed_query = query.translate(str.maketrans(punctiations)).lower()
     return processed_query
 
-def tokenization(query: str, stopwords: list, stemmer:PorterStemmer) -> list:
-    words = query.split()
-    filtered_words = list(filter(lambda word: word not in stopwords, words))
-    stemmed_words = []
-    for token in filtered_words:
-        stemmed_words.append(stemmer.stem(token))
-    return stemmed_words
-
 def print_movies(movies: list) -> None:
     for movie in movies:
-        print(f"{movie["id"]}. {movie["title"]} {movie["id"]}")
+        print(f"{movie['id']}. {movie['title']} {movie['id']}")
