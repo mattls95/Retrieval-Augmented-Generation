@@ -1,5 +1,3 @@
-import string
-
 from .search_utils import load_movies, tokenization
 from lib.inverted_index import InvertedIndex
 
@@ -22,14 +20,6 @@ def search(query, inverted_index:InvertedIndex) -> None:
             break
 
     print_movies(results)
-
-def process_string(query) -> str:
-    punctiations = {}
-    for char in string.punctuation:
-        punctiations[char] = None
-
-    processed_query = query.translate(str.maketrans(punctiations)).lower()
-    return processed_query
 
 def print_movies(movies: list) -> None:
     for movie in movies:

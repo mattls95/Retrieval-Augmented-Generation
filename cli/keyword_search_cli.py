@@ -13,6 +13,9 @@ def main() -> None:
     search_parser.add_argument("query", type=str, help="Search query")
 
     subparsers.add_parser("build", help="Build inverted index")
+    tf_parser = subparsers.add_parser("tf", help="Get term frequency")
+    tf_parser.add_argument("doc_id", type=int, help="Document ID")
+    tf_parser.add_argument("term", type=str, help="Term to get the frequency for")
 
     args = parser.parse_args()
     inverted_index = InvertedIndex()
@@ -28,6 +31,12 @@ def main() -> None:
         case "build":
             inverted_index.build()
             inverted_index.save()
+        case "tf":
+            try:
+                inverted_index.load()
+                print(inverted_index.get_tf(args.doc_id, args.term))
+            except ValueError:
+                    print("more terms than expected given expected: 1")
 
 if __name__ == "__main__":
     main()
