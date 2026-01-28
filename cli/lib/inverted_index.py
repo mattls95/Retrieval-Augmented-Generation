@@ -2,7 +2,7 @@
 from .search_utils import load_movies, CACHE_DIR,INDEX_PATH,DOCMAP_PATH, tokenization, TERM_FREQUENCIES_PATH
 from pickle import dump, load
 from collections import Counter
-import os
+import os, math
 
 class InvertedIndex:
     def __init__(self):
@@ -26,13 +26,28 @@ class InvertedIndex:
         return sorted(doc_ids)
 
     def get_tf(self, doc_id, term) -> int:
-        token = tokenization(term)   
-        if len(token) > 1:
+        tokens = tokenization(term)   
+        if len(tokens) > 1:
             raise ValueError("more then one token given")
         
+        token = tokens[0]
+
         if doc_id not in self.term_frequencies:
             return 0
-        return self.term_frequencies[doc_id].get(term)
+        return self.term_frequencies[doc_id].get(token)
+    
+    def get_idf(self, term):
+        tokens = tokenization(term)
+        if len(tokens) > 1:
+            raise ValueError("more then one token given")
+        token = tokens[0]
+        
+        total_doc_count = len(self.docmap)
+        term_match_doc_count = len(self.index[token])
+        return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
+    
+    def get_tf_idf(self, doc_id, term):
+        return self.get_tf(doc_id, term) * self.get_idf(term)
 
     def build(self):
         movies = load_movies()
