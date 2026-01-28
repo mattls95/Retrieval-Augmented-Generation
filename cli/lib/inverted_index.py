@@ -1,5 +1,5 @@
 
-from .search_utils import load_movies, CACHE_DIR,INDEX_PATH,DOCMAP_PATH, tokenization, TERM_FREQUENCIES_PATH
+from .search_utils import load_movies, CACHE_DIR,INDEX_PATH,DOCMAP_PATH, tokenization, TERM_FREQUENCIES_PATH, BM25_K1
 from pickle import dump, load
 from collections import Counter
 import os, math
@@ -40,14 +40,37 @@ class InvertedIndex:
         tokens = tokenization(term)
         if len(tokens) > 1:
             raise ValueError("more then one token given")
-        token = tokens[0]
         
+        token = tokens[0]
         total_doc_count = len(self.docmap)
         term_match_doc_count = len(self.index[token])
         return math.log((total_doc_count + 1) / (term_match_doc_count + 1))
     
     def get_tf_idf(self, doc_id, term):
         return self.get_tf(doc_id, term) * self.get_idf(term)
+    
+    def __get_bm25_idf(self, term: str) -> float:
+        tokens = tokenization(term)
+        if len(tokens) > 1:
+            raise ValueError("more then one token given")
+        
+        token = tokens[0]
+        total_doc_count = len(self.docmap)
+        term_match_doc_count = len(self.index[token])
+        return math.log((total_doc_count - term_match_doc_count + 0.5) / (term_match_doc_count + 0.5) + 1)
+    
+    def bm25_idf_command(self, term):
+        self.load()
+        return self.__get_bm25_idf(term)
+    
+    def __get_bm25_tf(self, doc_id, term, k1):
+        raw_tf = self.get_tf(doc_id,term)
+        bm25_saturation = (raw_tf * (k1 + 1) / (raw_tf + k1))
+        return bm25_saturation
+    
+    def bm25_tf_command(self, doc_id, term, k1=BM25_K1):
+        self.load()
+        return self.__get_bm25_tf(doc_id, term, k1)
 
     def build(self):
         movies = load_movies()

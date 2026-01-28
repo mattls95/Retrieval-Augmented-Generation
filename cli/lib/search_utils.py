@@ -10,6 +10,7 @@ CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 INDEX_PATH = os.path.join(CACHE_DIR, "index.pkl")
 DOCMAP_PATH = os.path.join(CACHE_DIR, "docmap.pkl")
 TERM_FREQUENCIES_PATH = os.path.join(CACHE_DIR, "term_frequencies.pkl")
+BM25_K1 = 1.5
 
 def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:
@@ -19,7 +20,6 @@ def load_movies():
     with open(MOVIES_PATH, "r") as file:
         return json.load(file)
     
-
 def tokenization(text: str) -> list:
     text = process_string(text)
     words = text.split()
