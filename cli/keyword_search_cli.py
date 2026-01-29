@@ -34,6 +34,10 @@ def main() -> None:
     bm25_tf_parser.add_argument("k1", type=float, nargs='?', default=BM25_K1, help="Tunable BM25 K1 parameter")
     bm25_tf_parser.add_argument("b", type=float, nargs='?', default=BM25_B, help="Tunable BM25 b parameter")
 
+    bm25search_parser = subparsers.add_parser("bm25search", help="Search movies using full BM25 scoring")
+    bm25search_parser.add_argument("query", type=str, help="Search query")
+    bm25search_parser.add_argument("--limit", type=int,  default=5, help="Limit for scores") 
+
     args = parser.parse_args()
     inverted_index = InvertedIndex()
 
@@ -80,7 +84,15 @@ def main() -> None:
                 bm25tf = inverted_index.bm25_tf_command(args.doc_id, args.term)
                 print(f"BM25 TF score of '{args.term}' in document '{args.doc_id}': {bm25tf:.2f}")
             except ValueError:
-                    print("more terms than expected given expected: 1")                      
+                    print("more terms than expected given expected: 1")     
+        case "bm25search":
+            try:
+                inverted_index.load()
+                bm25_list = inverted_index.bm25_search(args.query, args.limit)
+                for i,(doc, score) in enumerate(bm25_list, start=1):
+                     print(f"{i}. {doc['title']} - Score {score:.2f}")
+            except ValueError:
+                    print("more terms than expected given expected: 1")                 
 
 if __name__ == "__main__":
     main()

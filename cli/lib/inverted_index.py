@@ -26,6 +26,30 @@ class InvertedIndex:
     def get_document(self, term):
         doc_ids = self.index.get(term.lower(), set())
         return sorted(doc_ids)
+    
+    def bm25(self, doc_id, term):
+        bm_tf = self.__get_bm25_tf(doc_id, term)
+        bm_idf = self.__get_bm25_idf(term)
+        return bm_tf * bm_idf
+    
+    def bm25_search(self, query, limit):
+        tokens = tokenization(query)
+        scores = {}
+    
+        for doc_id in self.docmap:
+            for token in tokens:
+                if doc_id not in scores:
+                    scores[doc_id] = self.bm25(doc_id, token)
+                else:
+                    scores[doc_id] += self.bm25(doc_id, token)
+
+        scores_sorted = sorted(scores.items(), key= lambda score: score[1], reverse=True)
+        results = []
+        for doc_id, score in scores_sorted[:limit]:
+            doc = self.docmap[doc_id]
+            results.append((doc, score))
+        return results
+
 
     def get_tf(self, doc_id, term) -> int:
         tokens = tokenization(term)   
@@ -69,7 +93,7 @@ class InvertedIndex:
         self.load()
         return self.__get_bm25_tf(doc_id, term, k1, b)
     
-    def __get_bm25_tf(self, doc_id, term, k1, b):
+    def __get_bm25_tf(self, doc_id, term, k1=BM25_K1, b=BM25_B):
         length_norm = 1 -b + b * (self.doc_lengths[doc_id] / self.__get_avg_doc_length())
         raw_tf = self.get_tf(doc_id,term)
         bm25_saturation = (raw_tf * (k1 + 1)) / (raw_tf + k1 * length_norm)
