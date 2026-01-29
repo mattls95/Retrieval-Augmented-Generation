@@ -10,7 +10,9 @@ CACHE_DIR = os.path.join(PROJECT_ROOT, "cache")
 INDEX_PATH = os.path.join(CACHE_DIR, "index.pkl")
 DOCMAP_PATH = os.path.join(CACHE_DIR, "docmap.pkl")
 TERM_FREQUENCIES_PATH = os.path.join(CACHE_DIR, "term_frequencies.pkl")
+DOC_LENGTH_PATH = os.path.join(CACHE_DIR, "doc_lengths.pkl")
 BM25_K1 = 1.5
+BM25_B = 0.75
 
 def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:

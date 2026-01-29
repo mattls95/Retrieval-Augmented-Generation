@@ -1,5 +1,5 @@
 
-from .search_utils import load_movies, CACHE_DIR,INDEX_PATH,DOCMAP_PATH, tokenization, TERM_FREQUENCIES_PATH, BM25_K1
+from .search_utils import load_movies, CACHE_DIR,INDEX_PATH,DOCMAP_PATH, tokenization, TERM_FREQUENCIES_PATH, BM25_K1, DOC_LENGTH_PATH, BM25_B, DOC_LENGTH_PATH
 from pickle import dump, load
 from collections import Counter
 import os, math
@@ -9,10 +9,12 @@ class InvertedIndex:
         self.index = {}
         self.docmap = {}
         self.term_frequencies = {}
+        self.doc_lengths = {}
 
     def __add_document(self, doc_id, text):
         tokenized_text = tokenization(text)
         counter = Counter()
+        self.doc_lengths[doc_id] = len(tokenized_text)
         for token in tokenized_text:
             if token not in self.index:
                 self.index[token] = {doc_id}
@@ -34,7 +36,7 @@ class InvertedIndex:
 
         if doc_id not in self.term_frequencies:
             return 0
-        return self.term_frequencies[doc_id].get(token)
+        return self.term_frequencies[doc_id].get(token, 0)
     
     def get_idf(self, term):
         tokens = tokenization(term)
@@ -63,14 +65,23 @@ class InvertedIndex:
         self.load()
         return self.__get_bm25_idf(term)
     
-    def __get_bm25_tf(self, doc_id, term, k1):
+    def bm25_tf_command(self, doc_id, term, k1=BM25_K1, b=BM25_B):
+        self.load()
+        return self.__get_bm25_tf(doc_id, term, k1, b)
+    
+    def __get_bm25_tf(self, doc_id, term, k1, b):
+        length_norm = 1 -b + b * (self.doc_lengths[doc_id] / self.__get_avg_doc_length())
         raw_tf = self.get_tf(doc_id,term)
-        bm25_saturation = (raw_tf * (k1 + 1) / (raw_tf + k1))
+        bm25_saturation = (raw_tf * (k1 + 1)) / (raw_tf + k1 * length_norm)
         return bm25_saturation
     
-    def bm25_tf_command(self, doc_id, term, k1=BM25_K1):
-        self.load()
-        return self.__get_bm25_tf(doc_id, term, k1)
+    def __get_avg_doc_length(self) -> float:
+        total_length = 0
+        for doc_id in self.doc_lengths:
+            total_length += self.doc_lengths[doc_id]
+        if len(self.doc_lengths) == 0:
+            return 0.0
+        return total_length / len(self.doc_lengths)
 
     def build(self):
         movies = load_movies()
@@ -89,8 +100,11 @@ class InvertedIndex:
         with open(TERM_FREQUENCIES_PATH, "wb") as f:
             dump(self.term_frequencies, f)
 
+        with open(DOC_LENGTH_PATH, "wb") as f:
+            dump(self.doc_lengths, f)
+
     def load(self):
-        if not os.path.exists(INDEX_PATH) or not os.path.exists(DOCMAP_PATH) or not os.path.exists(TERM_FREQUENCIES_PATH):
+        if not os.path.exists(INDEX_PATH) or not os.path.exists(DOCMAP_PATH) or not os.path.exists(TERM_FREQUENCIES_PATH) or not os.path.exists(DOC_LENGTH_PATH):
             raise FileNotFoundError("index or docmap or term frequencies file not found")
         else:
             with open(INDEX_PATH,"rb") as f:
@@ -99,5 +113,7 @@ class InvertedIndex:
                 self.docmap = load(f)
             with open(TERM_FREQUENCIES_PATH, "rb") as f:
                 self.term_frequencies = load(f)
+            with open(DOC_LENGTH_PATH, "rb") as f:
+                self.doc_lengths = load(f)
 
     
