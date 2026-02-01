@@ -1,10 +1,11 @@
 from sentence_transformers import SentenceTransformer
 import numpy as np
 from lib import semantic_search_util as util
+import re
 
 class SemanticSearch:
-    def __init__(self):
-        self.model = SentenceTransformer('all-MiniLM-L6-v2')
+    def __init__(self, model_name='all-MiniLM-L6-v2'):
+        self.model = SentenceTransformer(model_name)
         self.embeddings = None
         self.documents = None
         self.document_map = {}
@@ -30,6 +31,7 @@ class SemanticSearch:
                 }
             )
         return results
+    
     def build_embedding(self, documents):
         self.documents = documents
         document_lst = []
@@ -72,6 +74,46 @@ def cosine_similarity(vec1, vec2):
         return 0.0
 
     return dot_product / (norm1 * norm2)
+
+def cmd_sematic_chunk(text, max_chunk_size, overlap):
+    results = []
+    stripped_text = text.strip()
+    if len(stripped_text) == 0:
+        return []
+    sentences = re.split(r"(?<=[.!?])\s+",stripped_text)
+    sentence = sentences[0]
+    if len(sentences) == 1 and not (sentence.endswith(".") or sentence.endswith("!") or sentence.endswith("?")):
+        results.append(sentence)
+        return results   
+
+    start = 0
+    while start < len(sentences) - overlap:
+        end = start + max_chunk_size
+        chunck_sentences = sentences[start:end]
+        chunk_sentence = " ".join(chunck_sentences).strip()
+        if len(chunk_sentence) != 0:
+            results.append(chunk_sentence)
+        start += max_chunk_size - overlap
+    return results
+
+def cmd_chunck(text, chunk_size, overlap):
+    num_char = len(text)
+    words = text.split()
+    results = []
+    start = 0
+    last_end = 0
+    while start < len(words):
+        end = start + chunk_size
+        if min(end, len(words)) > last_end:
+            last_end = end
+            chunk_words = words[start:end]
+            chunk_text = " ".join(chunk_words)
+            results.append(chunk_text)
+        start += (chunk_size - overlap)
+
+    print(f"Chunking {num_char} characters")
+    for i, text in enumerate(results, start=1):
+        print(f"{i}. {text}")
 
 def cmd_search(query, limit):
     movie_list = util.load_movies()
