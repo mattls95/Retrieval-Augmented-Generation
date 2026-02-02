@@ -10,7 +10,7 @@ class SemanticSearch:
         self.documents = None
         self.document_map = {}
 
-    def search(self, query, limit):
+    def search(self, query, limit) -> list[dict]:
         if self.embeddings is None:
             raise ValueError("No embeddings loaded. Call `load_or_create_embeddings` first.")
         query_embedding = self.generate_embedding(query)

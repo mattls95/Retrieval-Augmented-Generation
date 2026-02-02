@@ -10,6 +10,7 @@ class InvertedIndex:
         self.docmap = {}
         self.term_frequencies = {}
         self.doc_lengths = {}
+        self.index_path = INDEX_PATH
 
     def __add_document(self, doc_id, text):
         tokenized_text = tokenization(text)
@@ -32,7 +33,7 @@ class InvertedIndex:
         bm_idf = self.__get_bm25_idf(term)
         return bm_tf * bm_idf
     
-    def bm25_search(self, query, limit):
+    def bm25_search(self, query, limit) -> list[dict]:
         tokens = tokenization(query)
         scores = {}
     
@@ -47,7 +48,12 @@ class InvertedIndex:
         results = []
         for doc_id, score in scores_sorted[:limit]:
             doc = self.docmap[doc_id]
-            results.append((doc, score))
+            results.append({
+                "id": doc_id,
+                "title": doc["title"],
+                "document": doc["description"],
+                "score": score
+            })
         return results
 
 

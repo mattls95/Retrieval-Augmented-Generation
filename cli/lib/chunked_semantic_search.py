@@ -101,5 +101,3 @@ def cmd_embed_chunks():
     chunked_semantic_search = ChunkedSemanticSearch()
     embeddings = chunked_semantic_search.load_or_create_chunk_embeddings(movies['movies'])
     print(f"Generated {len(embeddings)} chunked embeddings")
-
-
