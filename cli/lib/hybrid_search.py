@@ -98,7 +98,7 @@ class HybridSearch:
                 combined_results[doc_id]["semantic_rank"] = rank
             combined_results[doc_id]["rrf_score"] += rrf_score(rank, k)
 
-        return sorted(combined_results.values(), key=lambda value: value["rrf_score"], reverse=True)
+        return sorted(combined_results.values(), key=lambda value: value["rrf_score"], reverse=True)[:limit]
 
 def rrf_score(rank, k=60):
         return 1 / (k + rank)
