@@ -65,10 +65,43 @@ class HybridSearch:
 
         return results
     
-
-
     def rrf_search(self, query, k, limit=10):
-        raise NotImplementedError("RRF hybrid search is not implemented yet.")
+        bm25_search_result = self._bm25_search(query,limit * 500)
+        chunked_search_result = self.semantic_search.search_chunks(query, limit * 500)
+
+        combined_results = {}
+
+        for rank, doc in enumerate(bm25_search_result, start=1):
+            doc_id = doc["id"]
+            if doc_id not in combined_results:
+                combined_results[doc["id"]] = {
+                    "title": doc["title"],
+                    "document": doc["document"],
+                    "bm25_rank": rank,
+                    "semantic_rank": None,
+                    "rrf_score": 0.0
+                }
+                combined_results[doc_id]["rrf_score"] += rrf_score(rank, k)
+
+
+        for rank, doc in enumerate(chunked_search_result, start=1):
+            doc_id = doc["id"]
+            if doc_id not in combined_results:
+                combined_results[doc["id"]] = {
+                    "title": doc["title"],
+                    "document": doc["document"],
+                    "bm25_rank": None,
+                    "semantic_rank": rank,
+                    "rrf_score": 0.0
+                }
+            else:
+                combined_results[doc_id]["semantic_rank"] = rank
+            combined_results[doc_id]["rrf_score"] += rrf_score(rank, k)
+
+        return sorted(combined_results.values(), key=lambda value: value["rrf_score"], reverse=True)
+
+def rrf_score(rank, k=60):
+        return 1 / (k + rank)
 
 def cmd_normalize_score(scores: list):
     _normalize_score(scores)
