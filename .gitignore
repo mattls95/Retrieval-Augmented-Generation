@@ -13,3 +13,6 @@ wheels/
 /data/
 
 /cache/
+
+# Enviroment variables
+.env
