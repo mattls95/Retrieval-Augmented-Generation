@@ -61,6 +61,22 @@ def gemini_query_expand(query):
             Query: "{query}"
             """
 
+def gemini_query_rerank(query, doc):
+    return f"""Rate how well this movie matches the search query.
+
+            Query: "{query}"
+            Movie: {doc.get("title", "")} - {doc.get("document", "")}
+
+            Consider:
+            - Direct relevance to query
+            - User intent (what they're looking for)
+            - Content appropriateness
+
+            Rate 0-10 (10 = perfect match).
+            Give me ONLY the number in your response, no other text or explanation.
+
+            Score:"""
+
 def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:
         return f.read().splitlines()
