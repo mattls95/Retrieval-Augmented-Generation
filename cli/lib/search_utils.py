@@ -76,6 +76,19 @@ def gemini_query_rerank(query, doc):
             Give me ONLY the number in your response, no other text or explanation.
 
             Score:"""
+def gemini_query_batch(query, doc_list_str):
+    return f"""Rank these movies by relevance to the search query.
+
+                Query: "{query}"
+
+                Movies:
+                {doc_list_str}
+
+                Return ONLY the IDs in order of relevance (best match first).
+                Return ONLY a valid JSON list, nothing else. Do not add explanations.
+
+                [75, 12, 34, 2, 1]
+                """
 
 def load_stopwords() -> list[str]:
     with open(STOPWORDS_PATH, "r") as f:
