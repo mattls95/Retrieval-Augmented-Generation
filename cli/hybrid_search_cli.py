@@ -26,6 +26,7 @@ def main() -> None:
     rrf_search_parser.add_argument("--limit", type=int, default=5, help="Limit for search results default to 5")
     rrf_search_parser.add_argument("--enhance", type=str, choices=["spell", "rewrite", "expand"], help="Query enhancement method")
     rrf_search_parser.add_argument("--rerank-method", type=str, choices=["individual", "batch", "cross_encoder"], help="Reranking most relevant documents")
+    rrf_search_parser.add_argument("--evaluate", action="store_true", help="determines if query should be evaluated")
 
     args = parser.parse_args()
     hybrid_search = HybridSearch(load_movies()["movies"])
@@ -72,6 +73,7 @@ def main() -> None:
                         f"RRF Score: {doc['rrf_score']}\n"
                         f"BM25 Rank: {doc['bm25_rank']}, Semantic Rank: {doc['semantic_rank']}\n"
                         f"{doc['document'][:200]}\n")
+                        
                 elif args.rerank_method == "cross_encoder":
                     pairs = []
                     cross_encoder = CrossEncoder("cross-encoder/ms-marco-TinyBERT-L2-v2")

@@ -88,6 +88,8 @@ class InvertedIndex:
         
         token = tokens[0]
         total_doc_count = len(self.docmap)
+        if token not in self.index:
+            return 0.0
         term_match_doc_count = len(self.index[token])
         return math.log((total_doc_count - term_match_doc_count + 0.5) / (term_match_doc_count + 0.5) + 1)
     

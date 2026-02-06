@@ -1,5 +1,6 @@
 import os
-
+import logging
+logger = logging.getLogger(__name__)
 from .inverted_index import InvertedIndex
 from .chunked_semantic_search import ChunkedSemanticSearch
 
